@@ -118,7 +118,7 @@ class Application {
       await this.initialize();
 
       this.server = this.app.listen(config.port, () => {
-        logger.info(`Kuroukai Free API v2.0.0 running on port ${config.port}`);
+        logger.info(`Koban Free API v2.0.0 running on port ${config.port}`);
         logger.info(`Environment: ${config.nodeEnv}`);
         logger.info(`Access at: http://localhost:${config.port}`);
       });

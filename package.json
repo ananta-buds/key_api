@@ -1,5 +1,5 @@
 {
-  "name": "kuroukai-free-api",
+  "name": "koban-free-api",
   "version": "2.0.0",
   "description": "API para gerar e gerenciar chaves de acesso gratuitas",
   "main": "src/app.js",
@@ -14,7 +14,7 @@
     "access-keys",
     "free"
   ],
-  "author": "Kuroukai",
+  "author": "Koban",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",

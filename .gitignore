@@ -62,3 +62,7 @@ Thumbs.db
 cookies.txt
 *.tmp
 *.temp
+
+# Build directories
+dist/
+build/
