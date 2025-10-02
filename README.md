@@ -63,7 +63,7 @@ npm install
 npx prisma migrate dev
 ```
 
-`prisma migrate dev` aplica as migrações em seu banco local/Neon e gera o client em `src/generated/prisma`.
+`prisma migrate dev` aplica as migrações em seu banco local/Neon e regenera o client em `node_modules/@prisma/client`.
 
 > Sempre mantenha o mesmo `DATABASE_URL` usado pela aplicação. Para Neon, garanta SSL obrigatório e rotacione a senha periodicamente.
 
