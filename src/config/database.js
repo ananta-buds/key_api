@@ -55,7 +55,7 @@ class Database {
 
   initialize() {
     return new Promise((resolve, reject) => {
-      const createTableSQL = `
+      const createKeysTableSQL = `
         CREATE TABLE IF NOT EXISTS access_keys (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           key_id TEXT UNIQUE NOT NULL,
@@ -70,15 +70,39 @@ class Database {
         )
       `;
 
+      const createAdminUsersTableSQL = `
+        CREATE TABLE IF NOT EXISTS admin_users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          expires_at DATETIME,
+          status TEXT DEFAULT 'active',
+          created_by TEXT,
+          last_login DATETIME,
+          ip_address TEXT
+        )
+      `;
+
       this.db.serialize(() => {
-        this.db.run(createTableSQL, (err) => {
+        // Create access_keys table
+        this.db.run(createKeysTableSQL, (err) => {
           if (err) {
-            logger.error('Error creating table:', { error: err.message });
+            logger.error('Error creating access_keys table:', { error: err.message });
             reject(err);
-          } else {
-            logger.info('Database tables initialized');
-            resolve();
+            return;
           }
+        });
+
+        // Create admin_users table
+        this.db.run(createAdminUsersTableSQL, (err) => {
+          if (err) {
+            logger.error('Error creating admin_users table:', { error: err.message });
+            reject(err);
+            return;
+          }
+          logger.info('Database tables initialized');
+          resolve();
         });
       });
     });

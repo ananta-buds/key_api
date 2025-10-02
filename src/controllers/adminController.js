@@ -355,6 +355,223 @@ class AdminController {
       });
     }
   }
+
+  /**
+   * Get all admin users (admin only)
+   */
+  async getAllAdminUsers(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const admins = await adminService.getAllAdmins();
+
+      res.json({
+        success: true,
+        count: admins.length,
+        admins
+      });
+    } catch (error) {
+      logger.error('Error getting admin users:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error retrieving admin users'
+      });
+    }
+  }
+
+  /**
+   * Create a new admin user (admin only)
+   */
+  async createAdminUser(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const { username, password, hours, permanent } = req.body;
+      const currentUsername = req.adminSession?.username || 'system';
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      if (!username || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'username and password are required'
+        });
+      }
+
+      // Validate username format (alphanumeric, underscore, hyphen only)
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+      if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username must be 3-30 characters and contain only letters, numbers, underscore, or hyphen'
+        });
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 8 characters long'
+        });
+      }
+
+      // Check password complexity
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+        });
+      }
+
+      // If permanent is true, set hours to null
+      const validityHours = permanent ? null : (hours || null);
+
+      const result = await adminService.createAdmin(username, password, validityHours, currentUsername, ipAddress);
+
+      if (result.error) {
+        return res.status(result.code || 400).json({
+          success: false,
+          message: result.error
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Admin user created successfully',
+        admin: result
+      });
+    } catch (error) {
+      logger.error('Error creating admin user:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error creating admin user'
+      });
+    }
+  }
+
+  /**
+   * Delete an admin user (admin only)
+   */
+  async deleteAdminUser(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const { id } = req.params;
+      const currentUsername = req.adminSession?.username || 'system';
+
+      const result = await adminService.deleteAdmin(parseInt(id), currentUsername);
+
+      if (result.error) {
+        return res.status(result.code || 400).json({
+          success: false,
+          message: result.error
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Admin user deleted successfully'
+      });
+    } catch (error) {
+      logger.error('Error deleting admin user:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error deleting admin user'
+      });
+    }
+  }
+
+  /**
+   * Get admin user details (admin only)
+   */
+  async getAdminUserDetails(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const { id } = req.params;
+
+      const admin = await adminService.getAdminById(parseInt(id));
+
+      if (!admin) {
+        return res.status(404).json({
+          success: false,
+          message: 'Admin user not found'
+        });
+      }
+
+      // Remove sensitive data
+      const { password_hash, ...adminData } = admin;
+
+      res.json({
+        success: true,
+        admin: adminData
+      });
+    } catch (error) {
+      logger.error('Error getting admin user details:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error retrieving admin user details'
+      });
+    }
+  }
+
+  /**
+   * Update admin user status (admin only)
+   */
+  async updateAdminUserStatus(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status || !['active', 'disabled'].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid status. Must be "active" or "disabled"'
+        });
+      }
+
+      const result = await adminService.updateAdminStatus(parseInt(id), status);
+
+      if (result.error) {
+        return res.status(result.code || 400).json({
+          success: false,
+          message: result.error
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Admin user status updated successfully'
+      });
+    } catch (error) {
+      logger.error('Error updating admin user status:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error updating admin user status'
+      });
+    }
+  }
+
+  /**
+   * Get admin users statistics
+   */
+  async getAdminUsersStats(req, res) {
+    try {
+      const adminService = require('../services/adminService');
+      const stats = await adminService.getStats();
+
+      res.json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      logger.error('Error getting admin users stats:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error retrieving statistics'
+      });
+    }
+  }
 }
 
 module.exports = new AdminController();

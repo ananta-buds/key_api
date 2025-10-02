@@ -127,7 +127,6 @@ function KeysManager() {
     <div className="keys-manager">
       <div className="manager-header">
         <h2>API Keys Manager</h2>
-        <p>Search and manage API keys by key ID or user ID</p>
       </div>
 
       <div className="search-section">

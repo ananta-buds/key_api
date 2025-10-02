@@ -51,4 +51,12 @@ router.get('/api/session', adminAuth.getSessionInfo.bind(adminAuth));
 router.get('/api/sessions', adminAuth.getActiveSessions.bind(adminAuth));
 router.delete('/api/sessions', adminAuth.clearAllSessions.bind(adminAuth));
 
+// Admin users management endpoints
+router.get('/api/users', adminController.getAllAdminUsers.bind(adminController));
+router.get('/api/users/stats', adminController.getAdminUsersStats.bind(adminController));
+router.post('/api/users/create', adminController.createAdminUser.bind(adminController));
+router.delete('/api/users/:id', adminController.deleteAdminUser.bind(adminController));
+router.get('/api/users/:id', adminController.getAdminUserDetails.bind(adminController));
+router.patch('/api/users/:id/status', adminController.updateAdminUserStatus.bind(adminController));
+
 module.exports = router;
