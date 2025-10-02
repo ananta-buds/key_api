@@ -5,6 +5,8 @@ const config = {
 
   // Database configuration
   database: {
+    url: process.env.DATABASE_URL || '',
+    // Compatibilidade legado: mantemos path caso scripts antigos ainda dependam.
     path: process.env.DATABASE_PATH || './keys.db'
   },
 

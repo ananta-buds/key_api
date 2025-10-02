@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 
 // Import configuration
 const config = require('./config');
-const database = require('./config/database');
+const prisma = require('./config/prisma');
 const Logger = require('./utils/logger');
 
 // Import middleware
@@ -36,7 +36,7 @@ class Application {
   async initialize() {
     try {
   // Connect to database
-      await database.connect();
+    await prisma.$connect();
 
   // Setup middleware
       this.setupMiddleware();
@@ -141,7 +141,7 @@ class Application {
           logger.info('HTTP server closed');
 
           try {
-            await database.close();
+            await prisma.$disconnect();
             logger.info('Database connection closed');
             process.exit(0);
           } catch (error) {
@@ -149,6 +149,15 @@ class Application {
             process.exit(1);
           }
         });
+      } else {
+        try {
+          await prisma.$disconnect();
+          logger.info('Database connection closed');
+          process.exit(0);
+        } catch (error) {
+          logger.error('Error closing database:', error);
+          process.exit(1);
+        }
       }
 
   // Force shutdown after 10 seconds

@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AccessKeyStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model AdminUser {
+  id           String        @id @default(uuid()) @db.Uuid
+  username     String        @unique @db.Citext
+  passwordHash String        @map("password_hash")
+  status       AdminStatus   @default(ACTIVE)
+  isPermanent  Boolean       @default(false) @map("is_permanent")
+  expiresAt    DateTime?     @map("expires_at")
+  lastLoginAt  DateTime?     @map("last_login_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  createdById  String?       @map("created_by") @db.Uuid
+  notes        String?
+
+  createdBy    AdminUser?    @relation("AdminUserCreatedBy", fields: [createdById], references: [id])
+  createdUsers AdminUser[]   @relation("AdminUserCreatedBy")
+  sessions     AdminSession[]
+  accessKeys   AccessKey[]
+
+  @@index([status])
+  @@index([expiresAt], map: "admin_users_expires_idx")
+}
+
+model AdminSession {
+  id              String       @id @default(uuid()) @db.Uuid
+  adminUserId     String       @map("admin_user_id") @db.Uuid
+  sessionTokenHash Bytes       @map("session_token_hash")
+  ipAddress       String?      @map("ip_address") @db.Inet
+  userAgent       String?      @map("user_agent")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  lastSeenAt      DateTime     @default(now()) @map("last_seen_at")
+  expiresAt       DateTime     @map("expires_at")
+  revokedAt       DateTime?    @map("revoked_at")
+
+  admin           AdminUser    @relation(fields: [adminUserId], references: [id])
+
+  @@index([adminUserId], map: "admin_sessions_user_idx")
+  @@unique([sessionTokenHash], map: "admin_sessions_token_idx")
+}
+
+model AccessKey {
+  id            Int             @id @default(autoincrement())
+  keyId         String          @unique @map("key_id") @db.Uuid
+  userId        String          @map("user_id")
+  status        AccessKeyStatus @default(ACTIVE)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  expiresAt     DateTime        @map("expires_at")
+  lastAccessed  DateTime?       @map("last_accessed_at")
+  usageCount    Int             @default(0) @map("usage_count")
+  ipAddress     String?         @map("ip_address") @db.Inet
+  createdById   String?         @map("created_by") @db.Uuid
+
+  createdBy     AdminUser?      @relation(fields: [createdById], references: [id])
+
+  @@index([userId], map: "access_keys_user_idx")
+  @@index([status])
+  @@index([expiresAt], map: "access_keys_expires_idx")
+}

@@ -1,0 +1,23 @@
+Passo a passo sugerido 🛠️
+Modelagem:
+Defina schema SQL para access_keys (já existe), admin_users, admin_sessions.
+Ajuste keys para ter FK para admin_users.created_by.
+Ferramentas:
+Adote Prisma (ou Knex) e remova sqlite3.
+Criar migrações iniciais.
+Sessões:
+Troque Map por Redis/Upstash ou tabela admin_sessions.
+Cookies HttpOnly, Secure, SameSite=strict. Considere JWT curto + refresh.
+Endpoints:
+Implementar /admin/api/users (GET, POST, PATCH status, DELETE) com validações.
+Proteger endpoints com RBAC básico (usuário master vs comum se necessário).
+Dashboard:
+Depois de backend operacional, o front já funciona. Remova dependências inúteis ("koban": "file:..", "konan-free-api": "file:..").
+Infra:
+Substitua keys.db por .gitignore.
+Configure variáveis no Vercel (DATABASE_URL, REDIS_URL, ADMIN_JWT_SECRET, etc.).
+Ajuste vercel.json se precisar rodar prisma generate no build (coloque script postinstall ou prisma generate antes do deploy).
+Segurança extra:
+Habilite CSRF se usar painéis stateful (ou use somente fetch com tokens).
+Rate-limit reforçado nos endpoints /admin/auth/login.
+Escolha um provider de e-mail/OTP se quiser recuperação.

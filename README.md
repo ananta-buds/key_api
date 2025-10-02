@@ -1,68 +1,77 @@
 # Koban Free API v2.0 (Uso interno)
 
-API simples para criar, validar e gerenciar chaves de acesso temporárias (SQLite) com um painel admin básico (React + Vite). Projeto para uso do time Koban.
+API para criar, validar e gerenciar chaves de acesso temporárias com um painel admin (React + Vite). Agora utiliza PostgreSQL (Neon) através do Prisma, garantindo persistência real para a API.
 
-Este README foca no que é necessário para rodar, operar e manter o serviço internamente.
+Este README resume como configurar o ambiente, rodar localmente e preparar o deploy interno.
 
 ## Visão geral
 
-- Node.js + Express (API)
-- SQLite3 (banco local por arquivo)
-- Painel Admin em React/Vite (build estático servido sob /admin)
-- Sessões de admin em memória (apenas para dev/ambiente interno)
+- Node.js + Express (REST API)
+- PostgreSQL (Neon) via Prisma ORM
+- Painel Admin em React/Vite (build estático servido em `/admin`)
+- Sessões de admin ainda em memória (serão migradas para banco/Redis em iterações futuras)
 
-Estrutura:
+Estrutura principal:
 
 ```
 src/
-├── app.js                 # Bootstrap do Express
+├── app.js                 # Bootstrap do Express + middlewares
 ├── config/
 │   ├── index.js          # Carrega variáveis e opções
-│   └── database.js       # Conexão SQLite + schema
+│   ├── prisma.js         # Singleton do Prisma Client
+│   └── database.js       # Wrapper legado → delega para Prisma
 ├── controllers/          # Regras dos endpoints
 ├── middleware/           # Validação, erros, auth admin
 ├── routes/               # Rotas /api, /admin, /
-├── services/             # keyService (regras de negócio)
-└── utils/                # keyUtils, logger
+├── services/             # keyService (negócio) usando Prisma
+└── utils/                # keyUtils, logger, helpers
 
 dashboard/                # Painel Admin (Vite + React)
-api/index.js              # Entrypoint serverless (Vercel)
-vercel.json               # Rewrites e build
+api/index.js              # Entrypoint serverless para Vercel
+prisma/                   # Schema e migrações Prisma
+vercel.json               # Rewrites + comando de build
 scripts/create-key.js     # Script CLI para criar chave
-keys.db                   # Banco local (ignorado no git)
 ```
 
 ## Pré-requisitos
 
 - Node 18+
 - NPM 9+
+- Acesso a uma instância Postgres (Neon recomendada)
 
-## Configuração (ENV)
+## Configuração (.env)
 
-Copie o template e ajuste:
+Copie o template e ajuste para o seu ambiente:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-O servidor carrega automaticamente o arquivo .env (dotenv). Principais variáveis (ver .env.example para detalhes):
-- PORT: porta do servidor (padrão 3000)
-- NODE_ENV: development|production
-- DATABASE_PATH: caminho do arquivo SQLite (./keys.db localmente)
-- CORS_ORIGIN: origem permitida. Se for usar cookies (credenciais), evite '*'
-- CORS_CREDENTIALS: true|false para enviar cookies/headers em CORS
-- RATE_LIMIT_WINDOW / RATE_LIMIT_MAX: rate limiting por IP
-- DEFAULT_KEY_HOURS / MAX_KEY_HOURS: duração padrão e máxima das chaves
-- LOG_LEVEL: error|warn|info|debug
-- IP_PREFERENCE: public|private (preferência de IP mostrado em logs/UI; padrão private em dev)
-- ADMIN_USERNAME / ADMIN_PASSWORD: login do admin (sessão em memória)
+Principais variáveis (veja o arquivo para comentários detalhados):
 
-## Como rodar
+- `DATABASE_URL`: string de conexão Postgres (`postgresql://user:pass@host/db?sslmode=require`). Guarde no Neon/Vercel como secret.
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD`: credenciais padrão para login do admin (rotacione em produção).
+- `ADMIN_LOGIN_MAX_ATTEMPTS` / `ADMIN_LOGIN_WINDOW_MS`: anti brute-force no login admin.
+- `PORT`, `NODE_ENV`, `CORS_ORIGIN`, `CORS_CREDENTIALS`, `RATE_LIMIT_*`, `DEFAULT_KEY_HOURS`, `MAX_KEY_HOURS`, `LOG_LEVEL`, `IP_PREFERENCE` – mesmos significados de antes.
 
-Desenvolvimento (com reload):
+O `dotenv` carrega o `.env` automaticamente no bootstrap.
+
+## Instalação e migrações
 
 ```powershell
 npm install
+npx prisma migrate dev
+```
+
+`prisma migrate dev` aplica as migrações em seu banco local/Neon e gera o client em `src/generated/prisma`.
+
+> Sempre mantenha o mesmo `DATABASE_URL` usado pela aplicação. Para Neon, garanta SSL obrigatório e rotacione a senha periodicamente.
+
+## Como rodar
+
+Dev com reload automático:
+
+```powershell
 npm run dev
 ```
 
@@ -72,17 +81,18 @@ Produção local:
 npm start
 ```
 
-Admin (local):
-- Acesse http://localhost:3000/admin/login e entre com ADMIN_USERNAME/ADMIN_PASSWORD
-- Se já tiver build do painel, use http://localhost:3000/admin/
+Painel Admin (local):
 
-Build do painel (opcional em dev, obrigatório para deploy):
+- Acesse [http://localhost:3000/admin/login](http://localhost:3000/admin/login) com as credenciais do `.env`.
+- O dashboard usa os endpoints protegidos `/admin/api/*`; certifique-se de estar autenticado.
+
+Build do dashboard (necessário para deploy, opcional em dev):
 
 ```powershell
-# Build completo (executa o build do dashboard a partir da raiz):
+# build completo (raiz)
 npm run build
 
-# Ou rodar o painel em modo dev (porta 5173, ajuste CORS_ORIGIN se necessário)
+# ou hot reload só do dashboard
 cd dashboard
 npm install
 npm run dev
@@ -90,105 +100,84 @@ npm run dev
 
 ## Endpoints principais
 
-Chaves (/api/keys):
-- POST /api/keys/create
-    - body: { "user_id": string, "hours"?: number }
-    - 200: { msg, code: 200, data: { key_id, user_id, expires_at, valid_for_hours } }
-    - 409: usuário já tem chave ativa (retorna dados da chave existente)
-- GET /api/keys/validate/:keyId
-    - 200/410/404 com { valid, code, time_remaining, usage_count, ... }
-- GET /api/keys/info/:keyId
-    - 200/410/404 com { data: {...} }
-- GET /api/keys/user/:userId
-    - 200 com lista de chaves do usuário
-- DELETE /api/keys/:keyId
-    - 200 ao deletar, 404 se não existir
+Chaves (`/api/keys`):
+
+- `POST /api/keys/create`
+    - body: `{ "user_id": string, "hours"?: number }
+    - `200` → chave criada | `409` → usuário já possui chave ativa
+- `GET /api/keys/validate/:keyId`
+    - retorna validade, tempo restante e incrementa `usage_count`
+- `GET /api/keys/info/:keyId`
+    - metadados sem incrementar uso
+- `GET /api/keys/user/:userId`
+    - lista de chaves de um usuário
+- `DELETE /api/keys/:keyId`
+    - remove a chave (404 se inexistente)
 
 Aplicação:
-- GET /bind/:keyId.js → retorna um JS seguro com o resultado (sem eval)
-- GET /test/:keyId → página minimalista que carrega o /bind
-- GET /health → status básico da API
 
-Admin (uso interno, sessão em memória):
-- GET /admin/login → página de login
-- POST /admin/auth/login → autentica e seta cookie admin_session
-- POST /admin/auth/logout → finaliza sessão
-- GET /admin/ → dashboard (depende do build do Vite)
-- GET /admin/api/stats → métricas básicas
-- GET /admin/api/session → info da sessão atual
-- GET /admin/api/sessions → sessões ativas
-- DELETE /admin/api/sessions → limpa todas as sessões
+- `GET /bind/:keyId.js` → script seguro com resposta JSON
+- `GET /test/:keyId` → página que usa o bind
+- `GET /health` → status
 
-Exemplos rápidos (PowerShell):
+Admin (sessão em memória por enquanto):
 
-```powershell
-# Criar chave
-curl.exe -X POST "http://localhost:3000/api/keys/create" -H "Content-Type: application/json" -d '{"user_id":"user123","hours":24}'
+- `GET /admin/login`, `POST /admin/auth/login`, `POST /admin/auth/logout`
+- `GET /admin/` → dashboard
+- `GET /admin/api/stats`, `GET /admin/api/session`, `GET /admin/api/sessions`, `DELETE /admin/api/sessions`
 
-# Validar
-curl.exe "http://localhost:3000/api/keys/validate/<KEY_ID>"
+Use `docs/examples.http` no VS Code para testes rápidos.
 
-# Info
-curl.exe "http://localhost:3000/api/keys/info/<KEY_ID>"
+## Notas de segurança / operação
 
-# Todas as chaves de um usuário
-curl.exe "http://localhost:3000/api/keys/user/user123"
+- Sessões admin ainda vivem em memória → reinícios derrubam logins; evite exposição pública.
+- Cookies admin usam `HttpOnly`, `SameSite=strict` e `Secure` (em NODE_ENV=production). Sempre rode sobre HTTPS.
+- Para CORS com credenciais, defina `CORS_ORIGIN` específico – não use `*`.
+- Ajuste o rate limit (`RATE_LIMIT_*`) conforme a carga esperada.
+- Logs ruidosos? use `LOG_LEVEL=warn`/`error` em produção.
 
-# Deletar
-curl.exe -X DELETE "http://localhost:3000/api/keys/<KEY_ID>"
-```
+## Persistência (PostgreSQL + Prisma)
 
-Se você usa o plugin REST Client no VS Code, veja `docs/examples.http`.
+- Toda a camada de dados usa Prisma (`src/config/prisma.js`).
+- Ao mudar o schema (`prisma/schema.prisma`), gere nova migração com `npx prisma migrate dev --name <descricao>`.
+- Para aplicar migrações em produção (Vercel), o build executa `npx prisma migrate deploy` automaticamente (ver abaixo).
+- Seeds: crie `prisma/seed.js` (não incluso) e execute com `npx prisma db seed` para criar admin inicial.
 
-## Notas de segurança e operação
+## Deploy (Vercel + Neon)
 
-- Sessões de admin são em memória: reinícios/novos pods zeram as sessões. Não usar para produção pública.
-- Cookies do admin usam SameSite=strict e secure em produção; exija HTTPS.
-- Se CORS_CREDENTIALS=true, não use CORS_ORIGIN='*'. Defina a origem do painel/app do time.
-- Em produção/atrás de proxy (Vercel, etc.) o app já configura trust proxy quando NODE_ENV=production.
-- Rate limit básico por IP está habilitado (ajuste RATE_LIMIT_* conforme necessário).
-- Logs: ajuste LOG_LEVEL. Em produção, evite 'debug'.
+1. Crie um projeto Neon (Postgres serverless) e copie a `DATABASE_URL`.
+2. Adicione `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` (e demais secrets) nas variáveis do projeto Vercel.
+3. O `vercel.json` executa o build com:
 
-## Persistência e Deploy
+     ```json
+     {
+         "buildCommand": "npx prisma migrate deploy && npm run build"
+     }
+     ```
 
-SQLite local:
-- Por padrão usa `./keys.db` (versionado no .gitignore). O arquivo é criado automaticamente.
-- Em Windows, mantenha caminhos simples (sem caracteres especiais) para evitar erros de permissão.
+     Isso garante que as migrações rodem antes do build do dashboard.
 
-Serverless (Vercel):
-- O entrypoint é `api/index.js` que reusa a instância do Express entre invocações.
-- `database.js` usa `/tmp/keys.db` quando detecta ambiente serverless. /tmp é efêmero e por instância.
-- Isso significa: os dados NÃO são duráveis nem compartilhados entre instâncias. Adequado apenas para demo/labs.
-- Se precisar persistência real, use um SQLite hospedado (e.g., mounted volume) ou migre para um DB gerenciado (Postgres/MySQL) e ajuste `database.js`/`keyService.js`.
+4. Rewrites principais:
+     - `/admin` → `/admin/`
+     - `/admin/auth/*`, `/admin/api/*`, `/api/*` → `api/index.js`
+     - `/admin/assets/*` → `dashboard/dist/assets/*`
+     - Qualquer outra rota → `api/index.js`
 
-Build/Rotas no Vercel (`vercel.json`):
-- `npm run build` na raiz faz build do painel (dashboard/dist)
-- Rewrites importantes:
-    - `/admin` → `/admin/` (barra final)
-    - `/admin/assets/*` → estáticos do `dashboard/dist`
-    - `/admin/*` → `dashboard/dist/index.html`
-    - `/api/*`, `/admin/api/*`, `/admin/auth/*` → função serverless `api/index.js`
-    - Qualquer outra rota → `api/index.js`
+5. A função serverless `api/index.js` instancia o Express uma vez por execução e reutiliza o Prisma Client.
 
-Observação sobre lockfile no dashboard: o build usa `npm --prefix dashboard ci`. Se falhar por ausência de package-lock.json, troque para `npm --prefix dashboard install` localmente e/ou gere o lockfile.
-
-Nota: No Windows PowerShell, use curl.exe para evitar alias do Invoke-WebRequest nos exemplos.
-
-## Script utilitário (CLI)
-
-Criação assistida de chave:
+## Utilitário CLI
 
 ```powershell
 node scripts/create-key.js
 ```
 
-O script pergunta o ambiente (localhost ou produção), user_id e horas, e faz a chamada ao endpoint.
+Escolha ambiente (localhost / produção), informe `user_id` e duração para criar uma chave via API.
 
 ## Problemas comuns
 
-- SQLITE_CANTOPEN / permissões: ajuste DATABASE_PATH para um diretório gravável.
-- CORS bloqueando cookies: defina CORS_ORIGIN para a origem exata do painel/app e CORS_CREDENTIALS=true.
-- 409 ao criar chave: o usuário já possui chave ativa; a resposta inclui dados e tempo restante.
+- `DATABASE_URL` inválida / SSL: use `?sslmode=require` no Neon.
+- Limite de tentativas de login: `ADMIN_LOGIN_MAX_ATTEMPTS` bloqueia temporariamente o IP.
+- 409 ao criar chave: usuário já tem chave ativa; a resposta traz tempo restante.
 - 410 em validate/info: chave expirada.
 
 ---
