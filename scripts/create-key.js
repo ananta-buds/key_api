@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Kuroukai Free API Key Creator Script
+// Koban Free API Key Creator Script
 // Uso: node create-key.js
 
 const readline = require('readline');
@@ -11,10 +11,10 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-console.log('Kuroukai Free API - Criador de Chaves');
+console.log('Koban Free API - Criador de Chaves');
 console.log('1) Localhost (http://localhost:3000)');
-console.log('2) Produção Railway (https://kuroukai-free-api.up.railway.app)');
-console.log('3) Produção Vercel (https://kuroukai-api.vercel.app)');
+console.log('2) Produção Railway (https://Koban-free-api.up.railway.app)');
+console.log('3) Produção Vercel (https://Koban-api.vercel.app)');
 rl.question('Escolha o ambiente (1, 2 ou 3): ', (env) => {
   let baseUrl;
   let client;
@@ -22,10 +22,10 @@ rl.question('Escolha o ambiente (1, 2 ou 3): ', (env) => {
     baseUrl = 'http://localhost:3000';
     client = http;
   } else if (env.trim() === '2') {
-    baseUrl = 'https://kuroukai-free-api.up.railway.app';
+    baseUrl = 'https://Koban-free-api.up.railway.app';
     client = https;
   } else if (env.trim() === '3') {
-    baseUrl = 'https://kuroukai-api.vercel.app';
+    baseUrl = 'https://Koban-api.vercel.app';
     client = https;
   } else {
     console.log('Opção inválida. Saindo.');

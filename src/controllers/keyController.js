@@ -146,7 +146,7 @@ class KeyController {
 
       // Generate safe JavaScript without eval
       const scriptContent = `
-// Kuroukai Free API - Key Validation
+// Koban Free API - Key Validation
 (function() {
   'use strict';
 
@@ -169,7 +169,7 @@ class KeyController {
   document.body.appendChild(container);
 
   // Log to console
-  console.log('Kuroukai API Response:', responseData);
+  console.log('Koban API Response:', responseData);
 })();
       `;
 
@@ -179,7 +179,7 @@ class KeyController {
       logger.error('Error generating binding script:', error);
 
       const errorScript = `
-// Kuroukai Free API - Error
+// Koban Free API - Error
 (function() {
   'use strict';
 

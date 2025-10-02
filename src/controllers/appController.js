@@ -9,7 +9,7 @@ class AppController {
    */
   healthCheck(req, res) {
     res.json({
-      msg: 'Kuroukai Free API is running',
+      msg: 'Koban Free API is running',
       code: 200,
       timestamp: new Date().toISOString(),
       version: '2.0.0',
@@ -22,7 +22,7 @@ class AppController {
    */
   getApiInfo(req, res) {
     res.json({
-      msg: 'Kuroukai Free API',
+      msg: 'Koban Free API',
       code: 200,
       version: '2.0.0',
       endpoints: {
@@ -37,7 +37,7 @@ class AppController {
         'GET /health': 'Health check'
       },
       documentation: {
-        github: 'https://github.com/Kuroukai/Kuroukai-free-api',
+        github: 'https://github.com/Koban/Koban-free-api',
         readme: 'See README.md for detailed usage instructions'
       }
     });
@@ -58,7 +58,7 @@ class AppController {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuroukai Key Validation - Error</title>
+    <title>Koban Key Validation - Error</title>
 </head>
 <body style="background-color: #000000; color: #ff0000; font-family: monospace; padding: 20px;">
     <pre>Error: Invalid key ID format</pre>
@@ -73,7 +73,7 @@ class AppController {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuroukai Key Validation</title>
+    <title>Koban Key Validation</title>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
 </head>
 <body>

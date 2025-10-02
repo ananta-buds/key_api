@@ -24,7 +24,7 @@ class AdminController {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuroukai Admin</title>
+    <title>Koban Admin</title>
     <style>
         body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;margin:0;background:#0b0b0b;color:#fff}
         .card{max-width:720px;margin:0 auto;background:#141414;border:1px solid #222;border-radius:12px;padding:24px}
@@ -39,7 +39,7 @@ class AdminController {
     </head>
     <body>
         <div class="card">
-            <h1>Kuroukai Admin</h1>
+            <h1>Koban Admin</h1>
             <div class="muted">Sessão: <code>${req.adminSession?.id || 'n/d'}</code></div>
             <div class="grid">
                 <div class="kpi"><div class="muted">Ambiente</div><div><code>${config.nodeEnv}</code></div></div>
@@ -62,7 +62,7 @@ class AdminController {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuroukai Admin - Login</title>
+    <title>Koban Admin - Login</title>
     <style>
         * {
             margin: 0;
@@ -209,7 +209,7 @@ class AdminController {
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>Kuroukai</h1>
+            <h1>Koban</h1>
             <p>Admin Dashboard</p>
         </div>
 

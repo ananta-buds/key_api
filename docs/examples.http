@@ -1,4 +1,4 @@
-### Kuroukai Free API - Exemplos de requests (REST Client VS Code)
+### Koban Free API - Exemplos de requests (REST Client VS Code)
 
 @base = http://localhost:3000
 @json = application/json

@@ -77,7 +77,6 @@ function AdminSettings() {
         <div className="settings-section">
           <div className="section-header">
             <h3>🔐 Authentication</h3>
-            <p>Manage admin passwords and sessions</p>
           </div>
 
           <div className="setting-card">
@@ -95,7 +94,6 @@ function AdminSettings() {
         <div className="settings-section">
           <div className="section-header">
             <h3>👥 Active Sessions</h3>
-            <p>Monitor and manage active admin sessions</p>
           </div>
 
           {error && (
@@ -172,7 +170,6 @@ function AdminSettings() {
         <div className="settings-section">
           <div className="section-header">
             <h3>💻 System Information</h3>
-            <p>Current system configuration and status</p>
           </div>
 
           <div className="setting-card">

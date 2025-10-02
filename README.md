@@ -1,6 +1,6 @@
-# Kuroukai Free API v2.0 (Uso interno)
+# Koban Free API v2.0 (Uso interno)
 
-API simples para criar, validar e gerenciar chaves de acesso temporárias (SQLite) com um painel admin básico (React + Vite). Projeto para uso do time Kuroukai.
+API simples para criar, validar e gerenciar chaves de acesso temporárias (SQLite) com um painel admin básico (React + Vite). Projeto para uso do time Koban.
 
 Este README foca no que é necessário para rodar, operar e manter o serviço internamente.
 
@@ -193,6 +193,6 @@ O script pergunta o ambiente (localhost ou produção), user_id e horas, e faz a
 
 ---
 
-Projeto interno do time Kuroukai.
+Projeto interno do time Koban.
 
 
