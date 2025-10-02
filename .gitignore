@@ -66,3 +66,4 @@ cookies.txt
 # Build directories
 dist/
 build/
+dashboard/dist/
