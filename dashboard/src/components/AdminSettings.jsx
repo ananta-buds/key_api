@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import './AdminSettings.css';
+import AdminUsersManager from './AdminUsersManager';
 
 function AdminSettings() {
+  const [activeTab, setActiveTab] = useState('sessions');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    if (activeTab === 'sessions') {
+      fetchSessions();
+    }
+  }, [activeTab]);
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -72,25 +76,35 @@ function AdminSettings() {
         <p>Manage admin sessions and system configuration</p>
       </div>
 
-      <div className="settings-sections">
-        {/* Authentication Settings */}
-        <div className="settings-section">
-          <div className="section-header">
-            <h3>🔐 Authentication</h3>
-          </div>
+      {/* Tabs Navigation */}
+      <div className="settings-tabs">
+        <button
+          className={`tab-button ${activeTab === 'sessions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sessions')}
+        >
+          🔐 Sessions
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          👥 Admin Users
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'system' ? 'active' : ''}`}
+          onClick={() => setActiveTab('system')}
+        >
+          💻 System
+        </button>
+      </div>
 
-          <div className="setting-card">
-            <div className="setting-info">
-              <h4>Environment Variables</h4>
-              <p>Configure passwords via environment variables for security</p>
-              <div className="env-vars">
-                <code>ADMIN_DEFAULT_PASSWORD=your_default_password</code>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      {/* Tab Content */}
+      {activeTab === 'users' ? (
+        <AdminUsersManager />
+      ) : (
+        <div className="settings-sections">
         {/* Session Management */}
+        {activeTab === 'sessions' && (
         <div className="settings-section">
           <div className="section-header">
             <h3>👥 Active Sessions</h3>
@@ -137,6 +151,7 @@ function AdminSettings() {
               ) : (
                 <div className="sessions-table">
                   <div className="table-header">
+                    <div className="header-cell">Username</div>
                     <div className="header-cell">Session ID</div>
                     <div className="header-cell">IP Address</div>
                     <div className="header-cell">Created</div>
@@ -144,6 +159,9 @@ function AdminSettings() {
                   </div>
                   {sessions.map((session) => (
                     <div key={session.id} className="table-row">
+                      <div className="table-cell username">
+                        <strong>{session.username || 'unknown'}</strong>
+                      </div>
                       <div className="table-cell session-id">
                         <code>{session.id.substring(0, 12)}...</code>
                       </div>
@@ -165,8 +183,10 @@ function AdminSettings() {
             </div>
           )}
         </div>
+        )}
 
         {/* System Information */}
+        {activeTab === 'system' && (
         <div className="settings-section">
           <div className="section-header">
             <h3>💻 System Information</h3>
@@ -192,7 +212,9 @@ function AdminSettings() {
             </div>
           </div>
         </div>
+        )}
       </div>
+      )}
     </div>
   );
 }
