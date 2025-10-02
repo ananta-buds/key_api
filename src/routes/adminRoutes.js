@@ -23,8 +23,8 @@ if (fs.existsSync(dashboardDist)) {
 }
 
 // Middleware to check auth for protected routes
-function requireAuthOrRedirect(req, res, next) {
-  const sessionToken = req.cookies?.admin_session;
+async function requireAuthOrRedirect(req, res, next) {
+  const sessionToken = req.cookies?.admin_session || req.headers['x-admin-session'];
 
   if (!sessionToken) {
     // Para qualquer rota /admin/api/*, sempre retorna JSON 401
@@ -36,7 +36,11 @@ function requireAuthOrRedirect(req, res, next) {
   }
 
   // Use o middleware de autenticação
-  adminAuth.requireAuth(req, res, next);
+  try {
+    await adminAuth.requireAuth(req, res, next);
+  } catch (error) {
+    next(error);
+  }
 }
 
 // Protected admin routes (require authentication)
@@ -50,5 +54,10 @@ router.get('/api/stats', adminController.getAdminStats.bind(adminController));
 router.get('/api/session', adminAuth.getSessionInfo.bind(adminAuth));
 router.get('/api/sessions', adminAuth.getActiveSessions.bind(adminAuth));
 router.delete('/api/sessions', adminAuth.clearAllSessions.bind(adminAuth));
+router.get('/api/admins', adminController.listAdmins.bind(adminController));
+router.get('/api/admins/:id', adminController.getAdmin.bind(adminController));
+router.post('/api/admins', adminController.createAdmin.bind(adminController));
+router.patch('/api/admins/:id', adminController.updateAdmin.bind(adminController));
+router.delete('/api/admins/:id', adminController.deleteAdmin.bind(adminController));
 
 module.exports = router;

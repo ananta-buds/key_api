@@ -15,9 +15,33 @@ function AdminUsersManager() {
     permanent: false
   });
 
+  const normalizeAdmin = (admin) => {
+    const expiresAt = admin.expires_at ? new Date(admin.expires_at) : null;
+    const isExpired = expiresAt ? expiresAt.getTime() <= Date.now() : false;
+
+    return {
+      id: admin.id,
+      username: admin.username,
+      status: admin.status || 'UNKNOWN',
+      is_permanent: Boolean(admin.is_permanent),
+      expires_at: admin.expires_at,
+      is_expired: isExpired,
+      created_at: admin.created_at,
+      updated_at: admin.updated_at,
+      last_login_at: admin.last_login_at,
+      notes: admin.notes || null
+    };
+  };
+
+  const calculateStats = (admins) => {
+    const total = admins.length;
+    const active = admins.filter((admin) => admin.status === 'ACTIVE' && !admin.is_expired).length;
+    const expired = admins.filter((admin) => admin.is_expired).length;
+    return { total, active, expired };
+  };
+
   useEffect(() => {
     fetchUsers();
-    fetchStats();
   }, []);
 
   const fetchUsers = async () => {
@@ -25,35 +49,23 @@ function AdminUsersManager() {
     setError('');
 
     try {
-      const response = await fetch('/admin/api/users', {
+      const response = await fetch('/admin/api/admins', {
         credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.admins || []);
+        const admins = (data.admins || []).map(normalizeAdmin);
+        setUsers(admins);
+        setStats(calculateStats(admins));
       } else {
-        throw new Error('Failed to fetch admin users');
+        const message = await response.text();
+        throw new Error(message || 'Failed to fetch admin users');
       }
     } catch (error) {
       setError('Error fetching admin users: ' + error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/admin/api/users/stats', {
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.stats || { total: 0, active: 0, expired: 0 });
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -71,18 +83,27 @@ function AdminUsersManager() {
     setError('');
 
     try {
-      const response = await fetch('/admin/api/users/create', {
+      const payload = {
+        username: formData.username.trim(),
+        password: formData.password,
+        status: 'ACTIVE',
+        is_permanent: formData.permanent
+      };
+
+      if (!formData.permanent) {
+        const hours = parseInt(formData.hours, 10);
+        if (Number.isFinite(hours) && hours > 0) {
+          payload.expires_at = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+        }
+      }
+
+      const response = await fetch('/admin/api/admins', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          hours: formData.permanent ? null : parseInt(formData.hours) || null,
-          permanent: formData.permanent
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -91,8 +112,7 @@ function AdminUsersManager() {
         alert('Admin user created successfully!');
         setFormData({ username: '', password: '', hours: '', permanent: false });
         setShowCreateForm(false);
-        fetchUsers();
-        fetchStats();
+        await fetchUsers();
       } else {
         throw new Error(data.message || 'Failed to create admin user');
       }
@@ -112,7 +132,7 @@ function AdminUsersManager() {
     setError('');
 
     try {
-      const response = await fetch(`/admin/api/users/${id}`, {
+      const response = await fetch(`/admin/api/admins/${id}?hard=true`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -121,8 +141,7 @@ function AdminUsersManager() {
 
       if (response.ok && data.success) {
         alert('Admin user deleted successfully!');
-        fetchUsers();
-        fetchStats();
+        await fetchUsers();
       } else {
         throw new Error(data.message || 'Failed to delete admin user');
       }
@@ -134,12 +153,12 @@ function AdminUsersManager() {
   };
 
   const handleToggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+    const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`/admin/api/users/${id}/status`, {
+      const response = await fetch(`/admin/api/admins/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -151,8 +170,7 @@ function AdminUsersManager() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        fetchUsers();
-        fetchStats();
+        await fetchUsers();
       } else {
         throw new Error(data.message || 'Failed to update status');
       }
@@ -169,7 +187,7 @@ function AdminUsersManager() {
   };
 
   const getStatusBadge = (user) => {
-    if (user.status !== 'active') {
+    if (user.status !== 'ACTIVE') {
       return <span className="badge badge-disabled">Disabled</span>;
     }
     if (user.is_expired) {
@@ -354,9 +372,6 @@ function AdminUsersManager() {
               <div key={user.id} className="table-row">
                 <div className="table-cell">
                   <strong>{user.username}</strong>
-                  {user.created_by && (
-                    <small className="created-by">by {user.created_by}</small>
-                  )}
                 </div>
                 <div className="table-cell">
                   {getStatusBadge(user)}
@@ -368,16 +383,16 @@ function AdminUsersManager() {
                   {formatDate(user.created_at)}
                 </div>
                 <div className="table-cell">
-                  {formatDate(user.last_login)}
+                  {formatDate(user.last_login_at)}
                 </div>
                 <div className="table-cell actions-cell">
                   <button
-                    onClick={() => handleToggleStatus(user.id, user.status)}
+                      onClick={() => handleToggleStatus(user.id, user.status)}
                     className="btn-action btn-toggle"
                     disabled={loading}
-                    title={user.status === 'active' ? 'Disable' : 'Enable'}
+                      title={user.status === 'ACTIVE' ? 'Disable' : 'Enable'}
                   >
-                    {user.status === 'active' ? '🔒' : '🔓'}
+                      {user.status === 'ACTIVE' ? '🔒' : '🔓'}
                   </button>
                   <button
                     onClick={() => handleDeleteUser(user.id, user.username)}

@@ -39,3 +39,40 @@ Content-Type: {{json}}
 
 ### Admin - Stats (após login; cookie admin_session deve estar presente)
 GET {{base}}/admin/api/stats
+
+### Admin - Sessão atual
+GET {{base}}/admin/api/session
+
+### Admin - Listar admins
+GET {{base}}/admin/api/admins
+
+### Admin - Criar admin
+POST {{base}}/admin/api/admins
+Content-Type: {{json}}
+
+{
+  "username": "newadmin",
+  "password": "senhaSecreta123",
+  "status": "ACTIVE",
+  "notes": "Criado via REST client"
+}
+
+### Admin - Atualizar admin
+PATCH {{base}}/admin/api/admins/{{adminId}}
+Content-Type: {{json}}
+
+{
+  "status": "DISABLED",
+  "notes": "Conta temporariamente bloqueada"
+}
+
+### Admin - Desativar admin (soft delete)
+DELETE {{base}}/admin/api/admins/{{adminId}}
+Content-Type: {{json}}
+
+{
+  "reason": "Acesso revogado pelo compliance"
+}
+
+### Admin - Remover admin definitivamente
+DELETE {{base}}/admin/api/admins/{{adminId}}?hard=true

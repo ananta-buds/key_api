@@ -9,7 +9,7 @@ Este README resume como configurar o ambiente, rodar localmente e preparar o dep
 - Node.js + Express (REST API)
 - PostgreSQL (Neon) via Prisma ORM
 - Painel Admin em React/Vite (build estático servido em `/admin`)
-- Sessões de admin ainda em memória (serão migradas para banco/Redis em iterações futuras)
+- Sessões e usuários admin persistidos no Postgres via Prisma
 
 Estrutura principal:
 
@@ -125,17 +125,25 @@ Aplicação:
 - `GET /test/:keyId` → página que usa o bind
 - `GET /health` → status
 
-Admin (sessão em memória por enquanto):
+Admin (requer sessão autenticada):
 
 - `GET /admin/login`, `POST /admin/auth/login`, `POST /admin/auth/logout`
 - `GET /admin/` → dashboard
 - `GET /admin/api/stats`, `GET /admin/api/session`, `GET /admin/api/sessions`, `DELETE /admin/api/sessions`
+- `GET /admin/api/admins` → lista admins (ordem de criação)
+- `GET /admin/api/admins/:id`
+- `POST /admin/api/admins`
+    - body: `{ "username": string, "password": string, "status"?: "ACTIVE" | "DISABLED", "expires_at"?: ISODate, "is_permanent"?: boolean, "notes"?: string }`
+- `PATCH /admin/api/admins/:id`
+    - permite atualizar qualquer campo acima; omita para manter valor atual. `expires_at` vazio remove expiração
+- `DELETE /admin/api/admins/:id`
+    - sem query → desativa admin (necessário `reason` opcional via body ou query); `?hard=true` remove permanentemente (não permitido para `is_permanent`)
 
-Use `docs/examples.http` no VS Code para testes rápidos.
+Use `docs/examples.http` no VS Code para testes rápidos (inclui exemplos dos novos endpoints).
 
 ## Notas de segurança / operação
 
-- Sessões admin ainda vivem em memória → reinícios derrubam logins; evite exposição pública.
+- Sessões admin são persistidas no Postgres; tokens ficam hashados e expiram automaticamente conforme `lifetime` definido.
 - Cookies admin usam `HttpOnly`, `SameSite=strict` e `Secure` (em NODE_ENV=production). Sempre rode sobre HTTPS.
 - Para CORS com credenciais, defina `CORS_ORIGIN` específico – não use `*`.
 - Ajuste o rate limit (`RATE_LIMIT_*`) conforme a carga esperada.

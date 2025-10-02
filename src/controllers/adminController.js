@@ -1,7 +1,25 @@
 const Logger = require('../utils/logger');
 const config = require('../config');
+const adminService = require('../services/adminService');
+const { isValidUUID } = require('../utils/keyUtils');
 
 const logger = new Logger(config.logging.level);
+
+function toAdminResponse(admin) {
+    if (!admin) return null;
+
+    return {
+        id: admin.id,
+        username: admin.username,
+        status: admin.status,
+        is_permanent: admin.isPermanent,
+        expires_at: admin.expiresAt ? admin.expiresAt.toISOString() : null,
+        created_at: admin.createdAt ? admin.createdAt.toISOString() : null,
+        updated_at: admin.updatedAt ? admin.updatedAt.toISOString() : null,
+        last_login_at: admin.lastLoginAt ? admin.lastLoginAt.toISOString() : null,
+        notes: admin.notes || null
+    };
+}
 
 class AdminController {
         /**
@@ -355,6 +373,217 @@ class AdminController {
       });
     }
   }
+
+    async listAdmins(req, res) {
+        try {
+            const admins = await adminService.listAdmins();
+            res.json({
+                success: true,
+                admins: admins.map(toAdminResponse)
+            });
+        } catch (error) {
+            logger.error('Error listing admins', error);
+            res.status(500).json({ success: false, message: 'Unable to list admins' });
+        }
+    }
+
+    async getAdmin(req, res) {
+        const { id } = req.params;
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid admin id' });
+        }
+
+        try {
+            const admin = await adminService.getAdminById(id);
+            if (!admin) {
+                return res.status(404).json({ success: false, message: 'Admin not found' });
+            }
+
+            res.json({ success: true, admin: toAdminResponse(admin) });
+        } catch (error) {
+            logger.error('Error retrieving admin', error);
+            res.status(500).json({ success: false, message: 'Unable to retrieve admin' });
+        }
+    }
+
+    async createAdmin(req, res) {
+        const { username, password, status, expires_at, is_permanent, notes } = req.body || {};
+
+        if (!username || typeof username !== 'string' || username.trim().length < 3) {
+            return res.status(400).json({ success: false, message: 'username must have at least 3 characters' });
+        }
+
+        if (!password || typeof password !== 'string' || password.length < 8) {
+            return res.status(400).json({ success: false, message: 'password must have at least 8 characters' });
+        }
+
+        let normalizedStatus = 'ACTIVE';
+        if (status) {
+            normalizedStatus = String(status).toUpperCase();
+            if (!['ACTIVE', 'DISABLED'].includes(normalizedStatus)) {
+                return res.status(400).json({ success: false, message: 'status must be ACTIVE or DISABLED' });
+            }
+        }
+
+        let expiresAt = null;
+        if (expires_at) {
+            const parsed = new Date(expires_at);
+            if (Number.isNaN(parsed.getTime())) {
+                return res.status(400).json({ success: false, message: 'expires_at must be a valid date' });
+            }
+            expiresAt = parsed;
+        }
+
+        try {
+            const admin = await adminService.createAdmin({
+                username: username.trim(),
+                password,
+                status: normalizedStatus,
+                isPermanent: Boolean(is_permanent),
+                expiresAt,
+                notes: typeof notes === 'string' ? notes.trim() : null,
+                createdById: req.adminUser?.id || null
+            });
+
+            res.status(201).json({ success: true, admin: toAdminResponse(admin) });
+        } catch (error) {
+            logger.error('Error creating admin user', error);
+            const isUniqueViolation = error?.code === 'P2002' || error?.message === 'Username already exists';
+            const message = isUniqueViolation ? 'Username already exists' : 'Unable to create admin';
+            res.status(isUniqueViolation ? 409 : 500).json({ success: false, message });
+        }
+    }
+
+    async updateAdmin(req, res) {
+        const { id } = req.params;
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid admin id' });
+        }
+
+        const { username, password, status, expires_at, is_permanent, notes } = req.body || {};
+        const updates = {};
+
+        if (username !== undefined) {
+            if (typeof username !== 'string' || username.trim().length < 3) {
+                return res.status(400).json({ success: false, message: 'username must have at least 3 characters' });
+            }
+            updates.username = username.trim();
+        }
+
+        if (password !== undefined) {
+            if (typeof password !== 'string' || password.length < 8) {
+                return res.status(400).json({ success: false, message: 'password must have at least 8 characters' });
+            }
+            updates.password = password;
+        }
+
+        if (status !== undefined) {
+            const normalizedStatus = String(status).toUpperCase();
+            if (!['ACTIVE', 'DISABLED'].includes(normalizedStatus)) {
+                return res.status(400).json({ success: false, message: 'status must be ACTIVE or DISABLED' });
+            }
+            updates.status = normalizedStatus;
+        }
+
+        if (expires_at !== undefined) {
+            if (!expires_at) {
+                updates.expiresAt = null;
+            } else {
+                const parsed = new Date(expires_at);
+                if (Number.isNaN(parsed.getTime())) {
+                    return res.status(400).json({ success: false, message: 'expires_at must be a valid date' });
+                }
+                updates.expiresAt = parsed;
+            }
+        }
+
+        if (is_permanent !== undefined) {
+            updates.isPermanent = Boolean(is_permanent);
+        }
+
+        if (notes !== undefined) {
+            updates.notes = typeof notes === 'string' ? notes.trim() : null;
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid fields to update' });
+        }
+
+        try {
+                const target = await adminService.getAdminById(id);
+                if (!target) {
+                    return res.status(404).json({ success: false, message: 'Admin not found' });
+                }
+
+                if (target.isPermanent) {
+                    if (Object.prototype.hasOwnProperty.call(updates, 'status') && updates.status !== 'ACTIVE') {
+                        return res.status(400).json({ success: false, message: 'Cannot change status of permanent admin' });
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(updates, 'isPermanent') && updates.isPermanent === false) {
+                        return res.status(400).json({ success: false, message: 'Cannot unset permanent flag from permanent admin' });
+                    }
+                }
+
+            const admin = await adminService.updateAdmin(id, updates);
+            res.json({ success: true, admin: toAdminResponse(admin) });
+        } catch (error) {
+            logger.error('Error updating admin', error);
+            if (error?.code === 'P2025') {
+                return res.status(404).json({ success: false, message: 'Admin not found' });
+            }
+
+            if (error?.code === 'P2002') {
+                return res.status(409).json({ success: false, message: 'Username already exists' });
+            }
+
+            res.status(500).json({ success: false, message: 'Unable to update admin' });
+        }
+    }
+
+    async deleteAdmin(req, res) {
+        const { id } = req.params;
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid admin id' });
+        }
+
+        if (req.adminUser?.id === id) {
+            return res.status(400).json({ success: false, message: 'You cannot delete the active admin session' });
+        }
+
+        const hardDelete = String(req.query.hard || 'false').toLowerCase() === 'true';
+        const reason = req.body?.reason || req.query?.reason;
+
+        try {
+            const target = await adminService.getAdminById(id);
+            if (!target) {
+                return res.status(404).json({ success: false, message: 'Admin not found' });
+            }
+
+            if (target.isPermanent && hardDelete) {
+                return res.status(400).json({ success: false, message: 'Cannot hard delete a permanent admin' });
+            }
+
+            if (hardDelete) {
+                await adminService.deleteAdmin(id);
+                return res.json({ success: true, message: 'Admin deleted permanently' });
+            }
+
+            if (target.isPermanent) {
+                return res.status(400).json({ success: false, message: 'Cannot disable a permanent admin' });
+            }
+
+            const admin = await adminService.disableAdmin(id, reason, req.adminUser?.id || null);
+            res.json({ success: true, admin: toAdminResponse(admin) });
+        } catch (error) {
+            logger.error('Error deleting admin', error);
+            if (error?.code === 'P2025') {
+                return res.status(404).json({ success: false, message: 'Admin not found' });
+            }
+
+            res.status(500).json({ success: false, message: 'Unable to delete admin' });
+        }
+    }
 }
 
 module.exports = new AdminController();
