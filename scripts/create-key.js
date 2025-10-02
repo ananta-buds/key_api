@@ -25,7 +25,7 @@ rl.question('Escolha o ambiente (1, 2 ou 3): ', (env) => {
     baseUrl = 'https://Koban-free-api.up.railway.app';
     client = https;
   } else if (env.trim() === '3') {
-    baseUrl = 'https://Koban-api.vercel.app';
+    baseUrl = 'https://key-api-ruddy.vercel.app';
     client = https;
   } else {
     console.log('Opção inválida. Saindo.');

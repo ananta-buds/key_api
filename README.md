@@ -47,6 +47,11 @@ Copie o template e ajuste para o seu ambiente:
 Copy-Item .env.example .env
 ```
 
+Overrides por ambiente:
+
+- Por padrão carregamos `.env` e, quando em desenvolvimento (`NODE_ENV=development` ou vazio), quaisquer arquivos `.env.local`, `.env.development` e `.env.development.local` se existirem, sobrescrevendo as chaves. Use isso para apontar `DATABASE_URL` para um banco sandbox/local sem afetar a string principal.
+- Em produção (ex.: Vercel), as variáveis vêm do painel do provedor; os arquivos `.env.*` não sobrescrevem as variáveis já definidas pelo ambiente.
+
 Principais variáveis (veja o arquivo para comentários detalhados):
 
 - `DATABASE_URL`: string de conexão Postgres (`postgresql://user:pass@host/db?sslmode=require`). Guarde no Neon/Vercel como secret.

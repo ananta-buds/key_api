@@ -1,5 +1,37 @@
-// Load environment variables from .env early
-require('dotenv').config();
+// Load environment variables com prioridade para overrides locais
+const path = require('path');
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+const projectRoot = process.cwd();
+const detectedNodeEnv = process.env.NODE_ENV || 'development';
+const isProdRuntime = process.env.VERCEL === '1' || detectedNodeEnv === 'production';
+
+const envFilesInOrder = [
+  '.env',
+  `.env.${detectedNodeEnv}`
+];
+
+const localOverrideFiles = [
+  '.env.local',
+  `.env.${detectedNodeEnv}.local`
+];
+
+function loadEnvFile(file, { override = false } = {}) {
+  const resolved = path.resolve(projectRoot, file);
+  if (!fs.existsSync(resolved)) return;
+  dotenv.config({ path: resolved, override });
+}
+
+envFilesInOrder.forEach((file, index) => {
+  if (!file) return;
+  const override = index > 0 && !isProdRuntime;
+  loadEnvFile(file, { override });
+});
+
+if (!isProdRuntime) {
+  localOverrideFiles.forEach(file => loadEnvFile(file, { override: true }));
+}
 
 const express = require('express');
 const cors = require('cors');
