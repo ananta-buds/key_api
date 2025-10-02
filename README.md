@@ -170,7 +170,7 @@ Build/Rotas no Vercel (`vercel.json`):
     - `/api/*`, `/admin/api/*`, `/admin/auth/*` → função serverless `api/index.js`
     - Qualquer outra rota → `api/index.js`
 
-Observação sobre lockfile no dashboard: o build usa `npm --prefix dashboard ci`. Se falhar por ausência de package-lock.json, troque para `npm --prefix dashboard install` localmente e/ou gere o lockfile.
+Observação sobre lockfile no dashboard: o build já roda `npm --prefix dashboard install --no-audit --no-fund` antes do vite build. Garanta que o package-lock.json do dashboard esteja sincronizado; se houver divergência, execute `npm --prefix dashboard install` localmente para regenerá-lo.
 
 Nota: No Windows PowerShell, use curl.exe para evitar alias do Invoke-WebRequest nos exemplos.
 
