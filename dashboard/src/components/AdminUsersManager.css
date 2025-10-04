@@ -37,20 +37,38 @@
 
 .btn-create {
   padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
   color: white;
-  border: none;
+  border: 1px solid #fff;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-create::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .btn-create:hover {
+  color: #0a0a0a;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-create:hover::before {
+  left: 0;
 }
 
 .btn-create:disabled {
@@ -68,8 +86,8 @@
 }
 
 .stat-card {
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -79,8 +97,9 @@
 }
 
 .stat-card:hover {
-  border-color: #667eea;
+  border-color: #fff;
   transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 .stat-icon {
@@ -133,8 +152,8 @@
 
 /* Create Form */
 .create-form-container {
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 30px;
@@ -183,8 +202,8 @@
 .form-group input[type="password"],
 .form-group input[type="number"] {
   padding: 12px 16px;
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #222;
   border-radius: 8px;
   color: #fff;
   font-size: 0.95rem;
@@ -193,8 +212,9 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  background: #1a1a1a;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 .form-group input:disabled {
@@ -213,15 +233,15 @@
   gap: 10px;
   cursor: pointer;
   padding: 12px;
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #222;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .checkbox-label:hover {
-  border-color: #667eea;
-  background: #1a1a1a;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -244,19 +264,37 @@
 
 .btn-submit {
   padding: 12px 32px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: transparent;
   color: white;
-  border: none;
+  border: 1px solid #fff;
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .btn-submit:hover {
+  color: #0a0a0a;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-submit:hover::before {
+  left: 0;
 }
 
 .btn-submit:disabled {
@@ -267,8 +305,8 @@
 
 /* Users Section */
 .users-section {
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 12px;
   padding: 30px;
 }
@@ -288,8 +326,8 @@
 
 .btn-refresh {
   padding: 8px 16px;
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #222;
   border-radius: 8px;
   color: #fff;
   font-size: 0.9rem;
@@ -298,8 +336,9 @@
 }
 
 .btn-refresh:hover {
-  border-color: #667eea;
-  background: #1a1a1a;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
 .btn-refresh:disabled {
@@ -319,8 +358,8 @@
   display: inline-block;
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(102, 126, 234, 0.2);
-  border-top-color: #667eea;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;

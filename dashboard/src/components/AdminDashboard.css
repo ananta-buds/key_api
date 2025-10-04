@@ -9,7 +9,7 @@ html, body, #root {
 html, body {
   margin: 0;
   padding: 0;
-  background: #0a0b0e;
+  background: #0a0a0a;
   /* Evita rolagem no body; a rolagem acontece apenas na área de conteúdo */
   overflow: hidden;
 }
@@ -22,9 +22,9 @@ html, body {
   min-height: 100dvh;
   height: 100dvh;
   width: 100%; /* evita overflow causado por 100vw + barra de rolagem */
-  background: #0a0b0e;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
   position: relative;
   overflow-x: hidden;
 }
@@ -46,8 +46,8 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid #222;
   backdrop-filter: blur(10px);
 }
 
@@ -56,6 +56,8 @@ html, body {
   font-weight: 600;
   margin: 0;
   color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
 }
 
 .header-actions {
@@ -81,20 +83,38 @@ html, body {
 }
 
 .logout-btn {
-  background: linear-gradient(135deg, #ff6b6b, #e63946);
-  color: white;
-  border: none;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.logout-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .logout-btn:hover {
+  color: #0a0a0a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.logout-btn:hover::before {
+  left: 0;
 }
 
 .content-body {
@@ -126,23 +146,23 @@ html, body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #0a0b0e;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #5865f2;
+  border-top: 3px solid #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
 }
 
 .loading-screen p {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(224, 224, 224, 0.7);
   font-size: 1.1rem;
 }
 

@@ -26,9 +26,9 @@ function Sidebar({ activeTab, onTabChange, onLogout, userSession }) {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="brand">
-          <div className="brand-icon">K</div>
+          <div className="brand-icon">小判</div>
           <div className="brand-text">
-            <h2>Konan</h2>
+            <h2>KOBAN</h2>
             <p>Admin Panel</p>
           </div>
         </div>

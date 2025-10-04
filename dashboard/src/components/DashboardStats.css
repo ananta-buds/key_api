@@ -15,8 +15,8 @@
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -35,16 +35,16 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  background: linear-gradient(90deg, transparent, #fff, transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .stat-card:hover::before {
@@ -52,23 +52,23 @@
 }
 
 .stat-card.primary {
-  --accent-color: #5865f2;
+  --accent-color: #ffffff;
 }
 
 .stat-card.success {
-  --accent-color: #57f287;
+  --accent-color: #ffffff;
 }
 
 .stat-card.warning {
-  --accent-color: #fee75c;
+  --accent-color: #ffffff;
 }
 
 .stat-card.info {
-  --accent-color: #5865f2;
+  --accent-color: #ffffff;
 }
 
 .stat-card.system {
-  --accent-color: #eb459e;
+  --accent-color: #ffffff;
 }
 
 .stat-icon {
@@ -78,9 +78,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #222;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .stat-content {
@@ -102,6 +104,7 @@
   color: #ffffff;
   line-height: 1.2;
   margin-bottom: 4px;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 .stat-value.capitalize {
@@ -129,7 +132,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #5865f2;
+  border-top: 3px solid #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -141,19 +144,37 @@
 }
 
 .retry-btn {
-  background: #5865f2;
+  background: transparent;
   color: white;
-  border: none;
+  border: 1px solid #fff;
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   margin-top: 16px;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.retry-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .retry-btn:hover {
-  background: #4752c4;
+  color: #0a0a0a;
+}
+
+.retry-btn:hover::before {
+  left: 0;
 }
 
 .stats-details {
@@ -163,8 +184,8 @@
 }
 
 .details-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 16px;
   padding: 24px;
   backdrop-filter: blur(10px);
@@ -176,6 +197,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 .activity-chart {

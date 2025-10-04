@@ -25,8 +25,8 @@
   display: flex;
   gap: 8px;
   margin-bottom: 32px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 12px;
   padding: 8px;
 }
@@ -54,9 +54,9 @@
 }
 
 .tab-button.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  color: #0a0a0a;
+  background: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
 
 .settings-sections {
@@ -66,8 +66,8 @@
 }
 
 .settings-section {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
   border-radius: 16px;
   padding: 24px;
   backdrop-filter: blur(10px);
@@ -76,7 +76,7 @@
 .section-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #222;
 }
 
 .section-header h3 {
@@ -161,9 +161,9 @@
 }
 
 .refresh-btn {
-  background: linear-gradient(135deg, #5865f2, #7289da);
+  background: transparent;
   color: white;
-  border: none;
+  border: 1px solid #fff;
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 0.9rem;
@@ -172,18 +172,36 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.refresh-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .refresh-btn:hover:not(:disabled) {
+  color: #0a0a0a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+.refresh-btn:hover:not(:disabled)::before {
+  left: 0;
 }
 
 .danger-btn {
-  background: linear-gradient(135deg, #ed4245, #c23616);
-  color: white;
-  border: none;
+  background: transparent;
+  color: #ed4245;
+  border: 1px solid #ed4245;
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 0.9rem;
@@ -192,12 +210,30 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.danger-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #ed4245;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .danger-btn:hover:not(:disabled) {
+  color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(237, 66, 69, 0.3);
+}
+
+.danger-btn:hover:not(:disabled)::before {
+  left: 0;
 }
 
 .refresh-btn:disabled,
@@ -205,7 +241,6 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
 }
 
 .error-message {
@@ -234,7 +269,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #5865f2;
+  border-top: 3px solid #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -272,7 +307,7 @@
   background: rgba(255, 255, 255, 0.02);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid #222;
 }
 
 .table-header {
@@ -281,7 +316,7 @@
   grid-template-columns: 1fr 1fr 1fr 2fr;
   gap: 16px;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #222;
 }
 
 .header-cell {
