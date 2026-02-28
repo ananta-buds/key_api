@@ -70,7 +70,6 @@
   border: 1px solid #222;
   border-radius: 16px;
   padding: 24px;
-  backdrop-filter: blur(10px);
 }
 
 .section-header {
@@ -380,6 +379,98 @@
   white-space: nowrap;
 }
 
+/* --- Sessions Table Layout --- */
+
+.sessions-count {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+.sessions-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #222;
+  border-radius: 12px;
+}
+
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.sessions-table th,
+.sessions-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.sessions-table th {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sessions-table td {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.87rem;
+}
+
+.sessions-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.sessions-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sessions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sessions-table tbody tr.current-row {
+  background: rgba(87, 242, 135, 0.04);
+}
+
+.sessions-table tbody tr.current-row:hover {
+  background: rgba(87, 242, 135, 0.07);
+}
+
+.session-username-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #fff !important;
+}
+
+.current-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #57f287;
+  background: rgba(87, 242, 135, 0.12);
+  border: 1px solid rgba(87, 242, 135, 0.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.session-ip-cell {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
 .links {
   display: flex;
   flex-direction: row;
@@ -425,29 +516,14 @@
     justify-content: center;
   }
 
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .sessions-table-wrap {
+    border-radius: 8px;
   }
 
-  .header-cell {
-    display: none;
-  }
-
-  .table-cell {
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  }
-
-  .table-cell:before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.6);
+  .sessions-table th,
+  .sessions-table td {
+    padding: 10px 12px;
     font-size: 0.8rem;
-    margin-right: 8px;
-    min-width: 80px;
-    display: inline-block;
   }
 
   .env-vars {

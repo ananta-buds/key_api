@@ -6,6 +6,9 @@ const router = express.Router();
 // Delete key
 router.delete('/:keyId', validateKeyId, keyController.deleteKey.bind(keyController));
 
+// Update key (status, expiration, etc.)
+router.patch('/:keyId', validateKeyId, keyController.updateKey.bind(keyController));
+
 // Create new key
 router.post('/create', validateCreateKey, keyController.createKey.bind(keyController));
 

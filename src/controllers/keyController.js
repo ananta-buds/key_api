@@ -23,6 +23,25 @@ class KeyController {
     }
   }
   /**
+   * Update a key (status, expiration, etc.)
+   */
+  async updateKey(req, res) {
+    try {
+      const { keyId } = req.params;
+      const updates = req.body;
+      const result = await keyService.updateKey(keyId, updates);
+
+      if (result.error) {
+        return res.status(result.code || 400).json({ error: result.error, code: result.code || 400 });
+      }
+
+      res.json(result);
+    } catch (error) {
+      handleDatabaseError(error, req, res);
+    }
+  }
+
+  /**
    * Create a new access key
    */
   async createKey(req, res) {

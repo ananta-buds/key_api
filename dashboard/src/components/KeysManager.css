@@ -31,7 +31,6 @@
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  backdrop-filter: blur(10px);
 }
 
 .search-form {
@@ -174,7 +173,6 @@
   background: rgba(255, 255, 255, 0.02) !important;
   border: 1px solid #222;
   border-radius: 16px;
-  backdrop-filter: blur(10px);
   overflow: hidden;
 }
 
@@ -264,10 +262,12 @@
 
 .keys-table tbody tr {
   background: transparent !important;
+  cursor: pointer;
+  transition: background 0.12s ease;
 }
 
-.keys-table tr:hover {
-  background: rgba(255, 255, 255, 0.02) !important;
+.keys-table tbody tr.clickable-row:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
 .keys-table thead tr:hover {
@@ -294,7 +294,26 @@
 
 .user-id {
   font-weight: 500;
-  color: #ffffff !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.user-id-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.user-id-badge:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .user-id:empty::after {

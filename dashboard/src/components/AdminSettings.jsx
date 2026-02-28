@@ -69,6 +69,27 @@ function AdminSettings() {
     return new Date(dateString).toLocaleString();
   };
 
+  const getTimeAgo = (dateString) => {
+    if (!dateString) return 'N/A';
+    const diff = Date.now() - new Date(dateString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'agora';
+    if (mins < 60) return `${mins}m atrás`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h atrás`;
+    const days = Math.floor(hours / 24);
+    return `${days}d atrás`;
+  };
+
+  const parseUserAgent = (ua) => {
+    if (!ua) return 'Desconhecido';
+    if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+    return ua.substring(0, 30);
+  };
+
   return (
     <div className="admin-settings">
       <div className="settings-header">
@@ -123,7 +144,7 @@ function AdminSettings() {
               className="refresh-btn"
               disabled={loading}
             >
-              {loading ? '🔄' : '🔄'} Refresh Sessions
+              Atualizar
             </button>
 
             <button
@@ -131,7 +152,7 @@ function AdminSettings() {
               className="danger-btn"
               disabled={loading}
             >
-              🗑️ Clear All Sessions
+              Encerrar todas
             </button>
           </div>
 
@@ -145,40 +166,42 @@ function AdminSettings() {
               {sessions.length === 0 ? (
                 <div className="empty-sessions">
                   <div className="empty-icon">👤</div>
-                  <h4>No Active Sessions</h4>
-                  <p>No admin sessions are currently active</p>
+                  <h4>Nenhuma sessão ativa</h4>
+                  <p>Não há sessões admin ativas no momento</p>
                 </div>
               ) : (
-                <div className="sessions-table">
-                  <div className="table-header">
-                    <div className="header-cell">Username</div>
-                    <div className="header-cell">Session ID</div>
-                    <div className="header-cell">IP Address</div>
-                    <div className="header-cell">Created</div>
-                    <div className="header-cell">User Agent</div>
+                <>
+                  <div className="sessions-count">{sessions.length} sessão(ões) ativa(s)</div>
+                  <div className="sessions-table-wrap">
+                    <table className="sessions-table">
+                      <thead>
+                        <tr>
+                          <th>Usuário</th>
+                          <th>IP</th>
+                          <th>Navegador</th>
+                          <th>Criada</th>
+                          <th>Último acesso</th>
+                          <th>Expira</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sessions.map((session) => (
+                          <tr key={session.id} className={session.isCurrent ? 'current-row' : ''}>
+                            <td className="session-username-cell">
+                              {session.username || 'unknown'}
+                              {session.isCurrent && <span className="current-badge">você</span>}
+                            </td>
+                            <td className="session-ip-cell">{session.ip || 'N/A'}</td>
+                            <td>{parseUserAgent(session.userAgent)}</td>
+                            <td>{formatDate(session.createdAt)}</td>
+                            <td>{getTimeAgo(session.lastSeenAt)}</td>
+                            <td>{formatDate(session.expiresAt)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  {sessions.map((session) => (
-                    <div key={session.id} className="table-row">
-                      <div className="table-cell username">
-                        <strong>{session.username || 'unknown'}</strong>
-                      </div>
-                      <div className="table-cell session-id">
-                        <code>{session.id.substring(0, 12)}...</code>
-                      </div>
-                      <div className="table-cell ip-address">
-                        {session.ip}
-                      </div>
-                      <div className="table-cell created-date">
-                        {formatDate(session.createdAt)}
-                      </div>
-                      <div className="table-cell user-agent">
-                        <span title={session.userAgent}>
-                          {session.userAgent?.substring(0, 50)}...
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                </>
               )}
             </div>
           )}

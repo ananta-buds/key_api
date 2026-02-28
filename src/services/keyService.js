@@ -223,6 +223,64 @@ class KeyService {
     }
   }
 
+  async updateKey(keyId, updates) {
+    try {
+      const existing = await prisma.accessKey.findUnique({ where: { keyId } });
+      if (!existing) {
+        return { error: 'Key not found', code: 404 };
+      }
+
+      const data = {};
+
+      if (updates.status !== undefined) {
+        const allowed = ['ACTIVE', 'REVOKED'];
+        if (!allowed.includes(updates.status)) {
+          return { error: `status must be one of: ${allowed.join(', ')}`, code: 400 };
+        }
+        data.status = updates.status;
+      }
+
+      if (updates.expires_at !== undefined) {
+        const newDate = new Date(updates.expires_at);
+        if (isNaN(newDate.getTime())) {
+          return { error: 'Invalid expires_at date', code: 400 };
+        }
+        data.expiresAt = newDate;
+      }
+
+      if (Object.keys(data).length === 0) {
+        return { error: 'No valid fields to update', code: 400 };
+      }
+
+      const updated = await prisma.accessKey.update({
+        where: { keyId },
+        data
+      });
+
+      logger.info('Key updated successfully', { keyId, updates: Object.keys(data) });
+
+      const mapped = mapAccessKeyRecord(updated);
+      const valid = isKeyValid(mapped);
+      const timeInfo = getRemainingTime(mapped.expires_at);
+
+      return {
+        msg: 'Key updated successfully',
+        code: 200,
+        data: {
+          ...mapped,
+          valid,
+          time_remaining: timeInfo
+        }
+      };
+    } catch (error) {
+      if (error?.code === 'P2025') {
+        return { error: 'Key not found', code: 404 };
+      }
+      logger.error('Failed to update key:', error);
+      return { error: 'Failed to update key', code: 500 };
+    }
+  }
+
   async deleteKey(keyId) {
     try {
       await prisma.accessKey.delete({

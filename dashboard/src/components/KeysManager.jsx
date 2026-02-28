@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './KeysManager.css';
+import KeyDetailModal from './KeyDetailModal';
 
 function KeysManager() {
   const [keys, setKeys] = useState([]);
@@ -8,6 +9,7 @@ function KeysManager() {
   const [searchType, setSearchType] = useState('key');
   const [searchValue, setSearchValue] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
 
   // API base URL (same-origin by default)
   const API_BASE = window.API_BASE || '';
@@ -42,11 +44,12 @@ function KeysManager() {
         keyId: item.key_id,
         userId: item.user_id,
         expiry: item.expires_at,
-        active: item.active !== false, // Default to true if not specified
+        active: item.active !== false,
         status: item.status || 'active',
         created: item.created_at,
         usage: item.usage_count || 0,
-        lastAccessed: item.last_accessed
+        lastAccessed: item.last_accessed,
+        ipAddress: item.ip_address || null
       });
 
       if (searchType === 'key') {
@@ -96,6 +99,38 @@ function KeysManager() {
   // Desativado por enquanto: endpoint /api/keys/:keyId/expiry não existe no backend
   const handleEditExpiry = async (_keyId) => {
     setError('Edit expiry is not available yet');
+  };
+
+  const handleUpdateKey = async (keyId, updates) => {
+    const res = await fetch(`${API_BASE}/api/keys/${keyId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Erro ao atualizar chave');
+    }
+    const data = await res.json();
+
+    // Update local state with returned data
+    setKeys(prev => prev.map(k => {
+      if (k.keyId !== keyId) return k;
+      const d = data.data;
+      return {
+        ...k,
+        expiry: d.expires_at,
+        active: d.status === 'active',
+        status: d.status,
+        usage: d.usage_count ?? k.usage,
+        lastAccessed: d.last_accessed ?? k.lastAccessed,
+        ipAddress: d.ip_address ?? k.ipAddress
+      };
+    }));
+  };
+
+  const handleOpenDetail = (key) => {
+    setSelectedKey(key);
   };
 
   const handleUserIdClick = (userId) => {
@@ -212,17 +247,20 @@ function KeysManager() {
                   <th>Created</th>
                   <th>Expires</th>
                   <th>Usage</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {keys.map((key) => (
-                  <tr key={key.keyId} className={isExpired(key.expiry) ? 'expired' : ''}>
+                  <tr
+                    key={key.keyId}
+                    className={`clickable-row ${isExpired(key.expiry) ? 'expired' : ''}`}
+                    onClick={() => handleOpenDetail(key)}
+                  >
                     <td className="key-id" style={{ position: 'relative' }}>
                       <button
-                        onClick={() => handleKeyIdClick(key.keyId)}
+                        onClick={(e) => { e.stopPropagation(); handleKeyIdClick(key.keyId); }}
                         style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none' }}
-                        title="id-clipboard"
+                        title="Copiar Key ID"
                         className="copy-keyid-btn"
                         tabIndex={0}
                         onMouseDown={e => e.preventDefault()}
@@ -237,7 +275,7 @@ function KeysManager() {
                             left: '50%',
                             transform: 'translateX(-50%)',
                             background: '#222',
-                            color: '#fff',
+                            color: '#57f287',
                             padding: '2px 8px',
                             borderRadius: '6px',
                             fontSize: '12px',
@@ -250,9 +288,7 @@ function KeysManager() {
                       )}
                     </td>
                     <td className="user-id">
-                      <button onClick={() => handleUserIdClick(key.userId)}>
-                        {key.userId}
-                      </button>
+                      <span className="user-id-badge">{key.userId}</span>
                     </td>
                     <td>
                       <span className={`status-badge ${key.active && !isExpired(key.expiry) ? 'active' : 'inactive'}`}>
@@ -264,18 +300,6 @@ function KeysManager() {
                       {formatDate(key.expiry)}
                     </td>
                     <td>{key.usage || 0}</td>
-                    <td>
-                      <div className="action-buttons">
-                        {/* Ações desativadas até implementação dos endpoints */}
-                        <button
-                          onClick={() => handleDelete(key.keyId)}
-                          className="action-btn delete"
-                          title="Delete key"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -283,6 +307,19 @@ function KeysManager() {
           </div>
         )}
       </div>
+
+      {/* Modal de detalhes/edição */}
+      {selectedKey && (
+        <KeyDetailModal
+          keyData={selectedKey}
+          onClose={() => setSelectedKey(null)}
+          onSave={handleUpdateKey}
+          onDelete={async (keyId) => {
+            await handleDelete(keyId);
+            setSelectedKey(null);
+          }}
+        />
+      )}
     </div>
   );
 }

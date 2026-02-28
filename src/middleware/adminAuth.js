@@ -187,10 +187,29 @@ class AdminAuth {
 
   async getActiveSessions(req, res, next) {
     try {
+      const now = new Date();
+
+      // Clean up expired/revoked sessions first
+      await prisma.adminSession.deleteMany({
+        where: {
+          OR: [
+            { expiresAt: { lte: now } },
+            { revokedAt: { not: null } }
+          ]
+        }
+      }).catch(() => {});
+
+      // Fetch only active sessions
       const sessions = await prisma.adminSession.findMany({
-        orderBy: { createdAt: 'desc' },
+        where: {
+          expiresAt: { gt: now },
+          revokedAt: null
+        },
+        orderBy: { lastSeenAt: 'desc' },
         include: { admin: true }
       });
+
+      const currentSessionId = req.adminSession?.id;
 
       const sanitized = sessions.map((session) => ({
         id: session.id,
@@ -206,7 +225,8 @@ class AdminAuth {
         lastSeenAt: session.lastSeenAt,
         expiresAt: session.expiresAt,
         ip: session.ipAddress,
-        userAgent: session.userAgent
+        userAgent: session.userAgent,
+        isCurrent: session.id === currentSessionId
       }));
 
       res.json({ success: true, sessions: sanitized, count: sanitized.length });
